@@ -1,4 +1,5 @@
 package net.codjo.test.release.task.gui;
+import com.google.code.tempusfugit.temporal.Condition;
 import java.awt.AWTEvent;
 import java.awt.Color;
 import java.awt.Toolkit;
@@ -9,10 +10,15 @@ import java.awt.event.KeyEvent;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import javax.swing.JFrame;
 import javax.swing.JTextField;
+import javax.swing.text.JTextComponent;
 import junit.extensions.jfcunit.JFCTestCase;
 import net.codjo.test.common.LogString;
+
+import static com.google.code.tempusfugit.temporal.Duration.seconds;
+import static com.google.code.tempusfugit.temporal.WaitFor.waitOrTimeout;
 
 public class PressKeyStepTest extends JFCTestCase {
     private final LogString log = new LogString();
@@ -83,7 +89,7 @@ public class PressKeyStepTest extends JFCTestCase {
 
         step.setValue("D");
         step.proceed(new TestContext(this));
-        assertUntilEquals("d", textField.getText());
+        waitOrTimeout(equals("d", text(textField)), seconds(1));
     }
 
 
@@ -97,8 +103,8 @@ public class PressKeyStepTest extends JFCTestCase {
         textField.setText("Db");
         step.setValue("ctrl A");
         step.proceed(new TestContext(this));
-        assertUntilEquals("Db", textField.getText());
-        assertUntilEquals("Db", textField.getSelectedText());
+        waitOrTimeout(equals("Db", text(textField)), seconds(1));
+        waitOrTimeout(equals("Db", selectedText(textField)), seconds(1));
     }
 
 
@@ -112,7 +118,7 @@ public class PressKeyStepTest extends JFCTestCase {
 
         step.setValue("shift D");
         step.proceed(new TestContext(this));
-        assertUntilEquals("D", textField.getText());
+        waitOrTimeout(equals("D", text(textField)), seconds(1));
     }
 
 
@@ -125,7 +131,7 @@ public class PressKeyStepTest extends JFCTestCase {
 
         step.setValue("ENTER");
         step.proceed(new TestContext(this));
-        assertUntilEquals(Color.RED, textField.getBackground());
+        waitOrTimeout(equals(Color.RED, background(textField)), seconds(1));
     }
 
 
@@ -166,7 +172,7 @@ public class PressKeyStepTest extends JFCTestCase {
     }
 
 
-    private void assertPressKeyUsingRobot(String expectedText) {
+    private void assertPressKeyUsingRobot(String expectedText) throws TimeoutException, InterruptedException {
         List<String> expectedList = Arrays.asList(expectedText.split(" "));
 
         StringBuilder expectedBuffer = new StringBuilder();
@@ -184,44 +190,70 @@ public class PressKeyStepTest extends JFCTestCase {
             expectedBuffer.append(", KEY_RELEASED, keyText=").append(expected);
         }
 
-        assertUntilEquals(expectedBuffer.toString(), log);
+        waitOrTimeout(equals(expectedBuffer.toString(), log), seconds(2));
     }
 
 
-    private void assertUntilEquals(Object expected, Object actual) {
-        AssertionError exception;
-        long startTime = System.currentTimeMillis();
-        do {
-            try {
-                assertEquals(expected, actual);
-                return;
+    public static PropertyGetter<Color> background(final JTextComponent component) {
+        return new PropertyGetter<Color>() {
+            public Color getProperty() {
+                return component.getBackground();
             }
-            catch (AssertionError e) {
-                exception = e;
-                flushAWT();
-            }
-        }
-        while (System.currentTimeMillis() - startTime < 1000);
-
-        throw exception;
+        };
     }
 
 
-    private void assertUntilEquals(String expected, LogString logString) {
-        AssertionError exception;
-        long startTime = System.currentTimeMillis();
-        do {
-            try {
-                logString.assertContent(expected);
-                return;
+    public static PropertyGetter<String> text(final JTextComponent component) {
+        return new PropertyGetter<String>() {
+            public String getProperty() {
+                return component.getText();
             }
-            catch (AssertionError e) {
-                exception = e;
-                flushAWT();
-            }
-        }
-        while (System.currentTimeMillis() - startTime < 2000);
+        };
+    }
 
-        throw exception;
+
+    public static PropertyGetter<String> selectedText(final JTextComponent component) {
+        return new PropertyGetter<String>() {
+            public String getProperty() {
+                return component.getSelectedText();
+            }
+        };
+    }
+
+
+    private <T> Condition equals(final T expected, final PropertyGetter<T> getter) {
+        return new Condition() {
+            public boolean isSatisfied() {
+                try {
+                    assertEquals(expected, getter.getProperty());
+                    return true;
+                }
+                catch (AssertionError e) {
+                    flushAWT();
+                }
+                return false;
+            }
+        };
+    }
+
+
+    public static interface PropertyGetter<T> {
+        public T getProperty();
+    }
+
+
+    private Condition equals(final String expected, final LogString logString) {
+        return new Condition() {
+            public boolean isSatisfied() {
+                try {
+                    logString.assertContent(expected);
+                    return true;
+                }
+                catch (AssertionError e) {
+                    flushAWT();
+                }
+                return false;
+            }
+        };
     }
 }

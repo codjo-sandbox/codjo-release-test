@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -142,21 +143,26 @@
             <artifactId>DJNativeSwing</artifactId>
         </dependency>
         <dependency>
-	        <groupId>${swt.groupId}</groupId>
-	        <artifactId>${swt.artifactId}</artifactId>
+            <groupId>${swt.groupId}</groupId>
+            <artifactId>${swt.artifactId}</artifactId>
         </dependency>
         <dependency>
             <groupId>com.moxiecode</groupId>
             <artifactId>tinymce</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>com.googlecode.junit-ext</groupId>
             <artifactId>junit-ext</artifactId>
             <classifier>junit45</classifier>
             <scope>test</scope>
         </dependency>
-        
+
+        <dependency>
+            <groupId>com.google.code.tempus-fugit</groupId>
+            <artifactId>tempus-fugit</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <!--
