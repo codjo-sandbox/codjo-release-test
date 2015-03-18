@@ -190,7 +190,7 @@ public class PressKeyStepTest extends JFCTestCase {
             expectedBuffer.append(", KEY_RELEASED, keyText=").append(expected);
         }
 
-        waitOrTimeout(equals(expectedBuffer.toString(), log), seconds(2));
+        waitOrTimeout(equals(expectedBuffer.toString(), log), seconds(10));
     }
 
 
