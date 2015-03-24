@@ -1,5 +1,7 @@
 package net.codjo.test.release.task.gui;
 import com.google.code.tempusfugit.temporal.Condition;
+import com.google.code.tempusfugit.temporal.DefaultDateFactory;
+import com.google.code.tempusfugit.temporal.Timeout;
 import java.awt.AWTEvent;
 import java.awt.Color;
 import java.awt.Toolkit;
@@ -18,6 +20,7 @@ import junit.extensions.jfcunit.JFCTestCase;
 import net.codjo.test.common.LogString;
 
 import static com.google.code.tempusfugit.temporal.Duration.seconds;
+import static com.google.code.tempusfugit.temporal.StopWatch.start;
 import static com.google.code.tempusfugit.temporal.WaitFor.waitOrTimeout;
 
 public class PressKeyStepTest extends JFCTestCase {
@@ -190,7 +193,12 @@ public class PressKeyStepTest extends JFCTestCase {
             expectedBuffer.append(", KEY_RELEASED, keyText=").append(expected);
         }
 
-        waitOrTimeout(equals(expectedBuffer.toString(), log), seconds(10));
+        Condition condition = equals(expectedBuffer.toString(), log);
+        Timeout timeout = new Timeout(seconds(5), start(new DefaultDateFactory()));
+        do {
+            Thread.sleep(100);
+        }
+        while (!condition.isSatisfied() && !timeout.hasExpired());
     }
 
 
