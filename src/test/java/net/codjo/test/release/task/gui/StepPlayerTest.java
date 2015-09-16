@@ -5,7 +5,11 @@
  */
 package net.codjo.test.release.task.gui;
 import java.awt.Dialog;
+import java.awt.Dimension;
 import java.awt.Frame;
+import java.awt.Rectangle;
+import java.awt.Robot;
+import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.io.File;
@@ -27,15 +31,24 @@ import org.apache.tools.ant.Project;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InOrder;
+import org.mockito.Mockito;
 
+import static java.awt.event.KeyEvent.VK_PRINTSCREEN;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
+import static net.codjo.test.release.task.gui.StepPlayer.USE_PRINT_SCREEN_KEY;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 /**
  * Classe de test de {@link StepPlayer}.
  */
 public class StepPlayerTest {
     private static final Logger LOG = Logger.getLogger(StepPlayerTest.class);
 
+    private Robot robot;
     private StepPlayer player;
     private Project project;
     private String testName;
@@ -44,7 +57,13 @@ public class StepPlayerTest {
     @Before
     public void setUp() throws Exception {
         project = new Project();
-        player = new StepPlayer(project, null);
+        player = new StepPlayer(project, null) {
+            @Override
+            void saveScreenshot(Robot robot) {
+                StepPlayerTest.this.robot = Mockito.spy(robot);
+                super.saveScreenshot(StepPlayerTest.this.robot);
+            }
+        };
     }
 
 
@@ -64,10 +83,27 @@ public class StepPlayerTest {
 
 
     @Test
-    public void test_play_nok_GuiException() throws Exception {
-        project.setUserProperty("ant.file", "toto.xml");
+    public void test_play_nok_GuiException_usePrintScreenKey() throws Exception {
+        test_play_nok_GuiException("testUsePrintScreenKey.xml", true);
+    }
+
+
+    @Test
+    public void test_play_nok_GuiException_doNotUsePrintScreenKey() throws Exception {
+        test_play_nok_GuiException("testDoNotUsePrintScreenKey.xml", false);
+    }
+
+
+    private void test_play_nok_GuiException(String antFile, boolean usePrintScreenKey) throws Exception {
+        project.setUserProperty("ant.file", antFile);
         GuiException expectedException = new GuiException("Exemple de GuiException");
         MockStep step = new MockStep(expectedException);
+        if (usePrintScreenKey) {
+            System.setProperty(USE_PRINT_SCREEN_KEY, "true");
+        }
+        else {
+            System.clearProperty(USE_PRINT_SCREEN_KEY);
+        }
 
         try {
             player.play(step);
@@ -77,6 +113,21 @@ public class StepPlayerTest {
             Assert.assertSame(expectedException, ex.getCause());
             Assert.assertEquals("Localisation impossible \n--> Exemple de GuiException", ex.getMessage());
             Assert.assertTrue(player.determineScreenShotFile().exists());
+        }
+
+        InOrder inOrder = Mockito.inOrder(robot);
+        if (usePrintScreenKey) {
+            inOrder.verify(robot, never()).createScreenCapture(any(Rectangle.class));
+            inOrder.verify(robot, times(1)).keyPress(VK_PRINTSCREEN);
+            inOrder.verify(robot, times(1)).keyRelease(VK_PRINTSCREEN);
+        }
+        else {
+            Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+            Rectangle expectedSize = new Rectangle(0, 0, screen.width, screen.height);
+            inOrder.verify(robot, times(1)).createScreenCapture(eq(expectedSize));
+            inOrder.verify(robot, never()).keyPress(VK_PRINTSCREEN);
+            inOrder.verify(robot, never()).keyRelease(VK_PRINTSCREEN);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
