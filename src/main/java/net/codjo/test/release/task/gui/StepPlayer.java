@@ -21,6 +21,7 @@ import javax.imageio.ImageIO;
 import junit.extensions.jfcunit.JFCTestCase;
 import junit.extensions.jfcunit.TestHelper;
 import junit.extensions.jfcunit.WindowMonitor;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.tools.ant.Project;
 
@@ -122,7 +123,15 @@ public class StepPlayer extends JFCTestCase {
                 robot.delay(40);
                 robot.keyRelease(VK_PRINTSCREEN);
                 robot.delay(40);
-                BufferedImage image = (BufferedImage)cb.getData(DataFlavor.imageFlavor);
+
+                DataFlavor wantedFlavor = DataFlavor.imageFlavor;
+                if (!cb.isDataFlavorAvailable(wantedFlavor)) {
+                    LOG.error("Can't take screenshort because data flavor " + wantedFlavor
+                              + " is unavailable. Available data flavors : "
+                              + StringUtils.join(cb.getAvailableDataFlavors()));
+                    return;
+                }
+                BufferedImage image = (BufferedImage)cb.getData(wantedFlavor);
                 ImageIO.write(image, "jpg", screenShotFile);
             }
             else {
