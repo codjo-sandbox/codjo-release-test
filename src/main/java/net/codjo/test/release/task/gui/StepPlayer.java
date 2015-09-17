@@ -4,8 +4,6 @@
  * Copyright (c) 2001 AGF Asset Management.
  */
 package net.codjo.test.release.task.gui;
-import com.sun.image.codec.jpeg.JPEGCodec;
-import com.sun.image.codec.jpeg.JPEGImageEncoder;
 import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.Toolkit;
@@ -14,7 +12,6 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import javax.imageio.ImageIO;
@@ -117,6 +114,7 @@ public class StepPlayer extends JFCTestCase {
             boolean usePrintScreenKey = "true".equals(System.getProperty(USE_PRINT_SCREEN_KEY));
             LOG.info(
                   "Taking screenshot with " + (usePrintScreenKey ? "PrintScreen key" : "Robot#createScreenCapture()"));
+            BufferedImage image;
             if (usePrintScreenKey) {
                 Clipboard cb = Toolkit.getDefaultToolkit().getSystemClipboard();
                 robot.keyPress(VK_PRINTSCREEN);
@@ -131,18 +129,13 @@ public class StepPlayer extends JFCTestCase {
                               + StringUtils.join(cb.getAvailableDataFlavors()));
                     return;
                 }
-                BufferedImage image = (BufferedImage)cb.getData(wantedFlavor);
+                image = (BufferedImage)cb.getData(wantedFlavor);
                 ImageIO.write(image, "jpg", screenShotFile);
             }
             else {
-                BufferedImage image =
-                      robot.createScreenCapture(new Rectangle(Toolkit.getDefaultToolkit().getScreenSize()));
-
-                JPEGImageEncoder encoder =
-                      JPEGCodec.createJPEGEncoder(new FileOutputStream(screenShotFile));
-
-                encoder.encode(image, encoder.getDefaultJPEGEncodeParam(image));
+                image = robot.createScreenCapture(new Rectangle(Toolkit.getDefaultToolkit().getScreenSize()));
             }
+            ImageIO.write(image, "jpg", screenShotFile);
         }
         catch (Throwable throwable) {
             LOG.warn("Echec du Screenshot", throwable);

@@ -85,6 +85,7 @@ public class FastGlassPaneComponentFinderTest extends JFCTestCase {
         internalFrame.setVisible(true);
 
         Component target = buildGlassPane(internalFrame);
+        assertTrue("glassPane must be visible", target.isVisible());
         Component found = findGlassPane(frame);
         internalFrame.dispose();
         assertThat(found, equalTo(target));
@@ -123,27 +124,29 @@ public class FastGlassPaneComponentFinderTest extends JFCTestCase {
 
 
     private <T extends Window & RootPaneContainer> void assertGlassPaneNotFound(T window) {
-		try {
-			window.setName(TARGET_NAME);
-			window.setVisible(true);
-			Component found = finder.findOnlyOne();
-			assertThat(found, nullValue());
-		} finally {
-			// It's only needed for JWindow but it doesn't hurt to free resources earlier.
-			window.dispose();
-		}
+        try {
+            window.setName(TARGET_NAME);
+            window.setVisible(true);
+            Component found = finder.findOnlyOne();
+            assertThat(found, nullValue());
+        }
+        finally {
+            // It's only needed for JWindow but it doesn't hurt to free resources earlier.
+            window.dispose();
+        }
     }
 
 
     private <T extends Window & RootPaneContainer> void assertGlassPaneFound(T window) {
-		try {
-			Component target = buildGlassPane(window);
-			Component found = findGlassPane(window);
-			assertThat(found, is(target));
-		} finally {
-			// It's not really needed, even for JWindow, but it doesn't hurt to free resources earlier.
-			window.dispose();
-		}
+        try {
+            Component target = buildGlassPane(window);
+            Component found = findGlassPane(window);
+            assertThat(found, is(target));
+        }
+        finally {
+            // It's not really needed, even for JWindow, but it doesn't hurt to free resources earlier.
+            window.dispose();
+        }
     }
 
 
@@ -151,6 +154,7 @@ public class FastGlassPaneComponentFinderTest extends JFCTestCase {
         Component panel = new JPanel();
         panel.setName(TARGET_NAME);
         container.setGlassPane(panel);
+        panel.setVisible(true); // already visible with java 5, but not with java 8
         return panel;
     }
 

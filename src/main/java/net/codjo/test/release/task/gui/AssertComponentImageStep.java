@@ -1,10 +1,6 @@
 package net.codjo.test.release.task.gui;
 
 import java.awt.Graphics;
-import net.codjo.test.release.ImageManager;
-import net.codjo.test.release.task.AgfTask;
-import net.codjo.test.release.util.comparisonstrategy.BufferedImageComparisonStrategy;
-import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -12,6 +8,9 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 import junit.extensions.jfcunit.finder.NamedComponentFinder;
+import net.codjo.test.release.task.AgfTask;
+import net.codjo.test.release.util.comparisonstrategy.BufferedImageComparisonStrategy;
+
 import static junit.framework.Assert.fail;
 /**
  *
@@ -27,22 +26,29 @@ public class AssertComponentImageStep extends AbstractAssertStep {
         JComponent component = getComponentFromName(context);
         try {
             BufferedImage componentBufferedImage = exportImageFromComponent(component);
-            BufferedImage expectedBufferedImage;
             String parentPath = context.getProperty(AgfTask.TEST_DIRECTORY);
             File expectedFile = new File(parentPath, expected);
-            if (!expectedFile.exists()) {
-                expectedBufferedImage = exportImageFromComponent(component);
-                ImageIO.write(expectedBufferedImage, "bmp", expectedFile);
-            }
-            else {
-                expectedBufferedImage = ImageIO.read(expectedFile);
-            }
+            BufferedImage expectedBufferedImage = readExpectedFile(expectedFile, component);
 
             proceedComparison(expectedBufferedImage, componentBufferedImage);
         }
         catch (IOException e) {
             fail("Impossible d'ouvrir le fichier spécifié.");
         }
+    }
+
+
+    BufferedImage readExpectedFile(File expectedFile, JComponent component) throws IOException {
+        BufferedImage expectedBufferedImage;
+        if (!expectedFile.exists()) {
+            expectedBufferedImage = exportImageFromComponent(component);
+            ImageIO.write(expectedBufferedImage, "bmp", expectedFile);
+        }
+        else {
+            expectedBufferedImage = ImageIO.read(expectedFile);
+        }
+
+        return expectedBufferedImage;
     }
 
 
@@ -62,9 +68,9 @@ public class AssertComponentImageStep extends AbstractAssertStep {
 
 
     private BufferedImage exportImageFromComponent(JComponent component) {
-       BufferedImage image = new BufferedImage(component.getWidth(),
-                                              component.getHeight(),
-                                              BufferedImage.TYPE_INT_RGB);
+        BufferedImage image = new BufferedImage(component.getWidth(),
+                                                component.getHeight(),
+                                                BufferedImage.TYPE_INT_RGB);
         Graphics gx = image.getGraphics();
         component.paint(gx);
         gx.dispose();

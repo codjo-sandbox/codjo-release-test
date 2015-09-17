@@ -1,8 +1,11 @@
 package net.codjo.test.release.task.gui;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -16,6 +19,8 @@ import junit.framework.AssertionFailedError;
 import net.codjo.test.common.PathUtil;
 import org.apache.tools.ant.Project;
 
+import static net.codjo.test.common.JdkUtil.getJdkSuffix;
+import static net.codjo.test.common.PathUtil.TEST_RESOURCES_DIRECTORY;
 import static net.codjo.test.release.task.AgfTask.TEST_DIRECTORY;
 /**
  *
@@ -36,7 +41,16 @@ public class AssertComponentImageStepTest extends JFCTestCase {
               TEST_DIRECTORY,
               PathUtil.findResourcesFileDirectory(getClass()).getPath());
 
-        assertComponentImageStep = new AssertComponentImageStep();
+        assertComponentImageStep = new AssertComponentImageStep() {
+            @Override
+            BufferedImage readExpectedFile(File expectedFile, JComponent component) throws IOException {
+                String path = expectedFile.getAbsolutePath();
+                path = path.replace('\\', '/');
+                path = path.replace(TEST_RESOURCES_DIRECTORY, TEST_RESOURCES_DIRECTORY + getJdkSuffix());
+                expectedFile = new File(path);
+                return super.readExpectedFile(expectedFile, component);
+            }
+        };
         assertComponentImageStep.setTimeout(1);
         assertComponentImageStep.setDelay(5);
         assertComponentImageStep.setWaitingNumber(10);
@@ -62,8 +76,8 @@ public class AssertComponentImageStepTest extends JFCTestCase {
         assertComponentImageStep.setName(textField2.getName());
         assertComponentImageStep.setExpected("JTextField2.bmp");
         assertComponentImageStep.proceed(new TestContext(this, project));
-        File etalon = new File(PathUtil.findResourcesFileDirectory(getClass()), "JTextField2.bmp");
-        if(etalon.exists()) {
+        File etalon = new File(PathUtil.findResourcesFileDirectory(getClass(), true), "JTextField2.bmp");
+        if (etalon.exists()) {
             etalon.delete();
         }
 

@@ -1,5 +1,4 @@
 package net.codjo.test.release.util.ssh;
-import net.codjo.util.file.FileUtil;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
@@ -7,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Properties;
+import net.codjo.util.file.FileUtil;
 /**
  *
  */
@@ -50,6 +50,7 @@ public class UnixSessionFactory {
         Session session = jsch.getSession(login, host, port);
         Properties config = new Properties();
         config.put("StrictHostKeyChecking", "no");
+        config.put("PreferredAuthentications", "publickey,keyboard-interactive,password");
         session.setConfig(config);
 
         return session;
