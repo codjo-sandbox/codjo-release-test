@@ -13,8 +13,8 @@ import net.codjo.util.file.FileUtil;
 public class UnixSessionFactory {
     private final String login;
     private final String host;
-    private URL privateKey;
-    private int port;
+    private final URL privateKey;
+    private final int port;
 
 
     public UnixSessionFactory(String login, String host, int port, URL privateKey) {
